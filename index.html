@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+    <script>
+        // https://stackoverflow.com/questions/1284314/easter-date-in-javascript
+        function get_easter_date(y) {
+
+            var date, a, b, c, m, d;
+
+            // Instantiate the date object.
+            date = new Date;
+
+            // Set the timestamp to midnight.
+            date.setHours( 0, 0, 0, 0 );
+
+            // Set the year.
+            date.setFullYear( y );
+
+            // Find the golden number.
+            a = y % 19;
+
+            // Choose which version of the algorithm to use based on the given year.
+            b = ( 2200 <= y && y <= 2299 ) ?
+                ( ( 11 * a ) + 4 ) % 30 :
+                ( ( 11 * a ) + 5 ) % 30;
+
+            // Determine whether or not to compensate for the previous step.
+            c = ( ( b === 0 ) || ( b === 1 && a > 10 ) ) ?
+                ( b + 1 ) :
+                b;
+
+            // Use c first to find the month: April or March.
+            m = ( 1 <= c && c <= 19 ) ? 3 : 2;
+
+            // Then use c to find the full moon after the northward equinox.
+            d = ( 50 - c ) % 31;
+
+            // Mark the date of that full moon—the "Paschal" full moon.
+            date.setMonth( m, d );
+
+            // Count forward the number of days until the following Sunday (Easter).
+            date.setMonth( m, d + ( 7 - date.getDay() ) );
+
+            // Gregorian Western Easter Sunday
+            return date;
+        }
+
+        $( document ).ready(function() {
+            var now = new Date();
+            var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var easter = get_easter_date(today.getFullYear());
+
+            console.log("Today's date: " + today);
+            console.log("Easter date:  " + easter);
+
+            var easter_diff = (easter.getTime() - today.getTime()) / (24 * 60 * 60 * 1000);
+
+            console.log("Days until Easter:  " + easter_diff);
+
+            var verdict = 0;
+            var date_desc = null;
+            var date_desc_aka = null;
+            var comment = null;
+
+            if (easter_diff == 2) {
+                verdict = 3;
+                date_desc = "Wielki Piątek";
+            } else if (easter_diff == 46) {
+                verdict = 3;
+                date_desc = "Środa popielcowa";
+            } else if (easter_diff == 1) {
+                verdict = 2;
+                date_desc = "Wielka Sobota";
+            } else if (easter_diff == 0) {
+                verdict = 0;
+                date_desc = "Wielkanoc";
+            } else if (easter_diff == -5) {
+                verdict = 0;
+                date_desc = "piątek Oktawy Wielkanocnej";
+            } else if (easter_diff == -114) {
+                verdict = 0;
+                date_desc = "Uroczystość Najświętszego Serca Pana Jezusa";
+            } else if (today.getMonth() == 1 && today.getDate() == 1) {
+                verdict = 0;
+                date_desc = "Dzień Świętej Bożej Rodzicielki";
+                date_desc_aka = "Nowy Rok";
+            } else if (today.getMonth() == 8 && today.getDate() == 15) {
+                verdict = 0;
+                date_desc = "Wniebowzięcie Najświętszej Maryi Panny";
+                date_desc_aka = "Matki Boskiej Zielnej";
+            } else if (today.getMonth() == 11 && today.getDate() == 1) {
+                verdict = 0;
+                date_desc = "Wszystkich Świętych";
+            } else if (today.getMonth() == 12 && today.getDate() == 25) {
+                verdict = 0;
+                date_desc = "Boże Narodzenie";
+            } else if (today.getMonth() == 12 && today.getDate() == 24) {
+                verdict = 1;
+                date_desc = "Wigilia Bożego Narodzenia";
+            } else if (today.getDay() == 5) {
+                verdict = 2;
+                date_desc = "piątek";
+            }
+
+            if (verdict >= 2) {
+                $("#verdict").text("Dzisiaj jest post");
+            } else {
+                $("#verdict").text("Dzisiaj nie ma postu");
+            }
+
+            if (date_desc != null) {
+                $("#comment").text("jest " + date_desc);
+            }
+
+            if (verdict == 3) {
+                $("#comment").append(", więc obowiązuje post ścisły");
+            } else if (verdict == 1) {
+                $("#comment").append(", ale można zachować post ze względu na tradycję narodową");
+            }
+        });
+    </script>
+
+    <title>Czy jest post?</title>
+
+  </head>
+  <body>
+    <div class="container">
+        <h1 class="display-1" id="verdict"></h1>
+        <h2 class="text-muted mt-5" id="comment"></h2>
+    </div>
+  </body>
+</html>
