@@ -54,8 +54,8 @@
         }
 
         $( document ).ready(function() {
-            var now = new Date();
-            var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var today = new Date();
+            today.setHours( 0, 0, 0, 0 );
             var easter = get_easter_date(today.getFullYear());
 
             console.log("Today's date: " + today);
@@ -110,14 +110,25 @@
                 date_desc = "piątek";
             }
 
+            $("#verdict").hide();
+            $("#comment").hide();
+            $("#explain").hide();
+
             if (verdict >= 2) {
                 $("#verdict").text("Dzisiaj jest post");
             } else {
                 $("#verdict").text("Dzisiaj nie ma postu");
             }
 
+            var explain_fn = null;
+
             if (date_desc != null) {
-                $("#comment").text("jest " + date_desc);
+                $("#comment").text("Jest " + date_desc);
+                explain_fn = function() { $("#explain").fadeIn(250); };
+            }
+
+            if (date_desc_aka != null) {
+                $("#comment").append(" (aka " + date_desc_aka + ")");
             }
 
             if (verdict == 3) {
@@ -125,7 +136,17 @@
             } else if (verdict == 1) {
                 $("#comment").append(", ale można zachować post ze względu na tradycję narodową");
             }
+
+            if (date_desc != null) {
+                $("#comment").append(".");
+            }
+
+            $("#verdict").fadeIn(250, explain_fn);
         });
+
+        function show_comment() {
+            $("#explain").fadeOut(250, function() { $("#comment").fadeIn(250); });
+        }
     </script>
 
     <title>Czy jest post?</title>
@@ -133,8 +154,11 @@
   </head>
   <body>
     <div class="container">
-        <h1 class="display-1" id="verdict"></h1>
-        <h2 class="text-muted mt-5" id="comment"></h2>
+        <h1 class="display-1 text-center m-5" id="verdict"></h1>
+        <p class="text-center" id="explain">
+            <a href="#" onclick="show_comment();" class="mt-5">jak to?</a>
+        </p>
+        <h2 class="text-muted text-center mt-5" id="comment"></h2>
     </div>
   </body>
 </html>
