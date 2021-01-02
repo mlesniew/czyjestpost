@@ -64,8 +64,37 @@
         }
 
         $( document ).ready(function() {
+            var special_dates = [
+                {"easter_diff": 46, "verdict": 3, "desc": "Środa Popielcowa"},
+                {"easter_diff": 2, "verdict": 3, "desc": "Wielki Piątek"},
+                {"easter_diff": 1, "verdict": 2, "desc": "Wielka Sobota"},
+                {"easter_diff": 0, "verdict": 0, "desc": "Wielkanoc"},
+                {"easter_diff": -5, "verdict": 0, "desc": "piątek Oktawy Wielkanocnej"},
+                {"easter_diff": -42, "verdict": 0, "desc": "Uroczystość Wniebowstąpienia Pańskiego"},
+                {"easter_diff": -56, "verdict": 0, "desc": "Uroczystość Najświętszej Trójcy"},
+                {"easter_diff": -60, "verdict": 0, "desc": "Uroczystość Najświętszego Ciała i Krwi Chrystusa", "aka": "Boże Ciało"},
+                {"easter_diff": -68, "verdict": 0, "desc": "Uroczystość Najświętszego Serca Pana Jezusa"},
+                // ---
+                {"date": [1, 1], "verdict": 0, "desc": "Uroczystość Świętej Bożej Rodzicielki Maryi", "aka": "Nowy Rok"},
+                {"date": [1, 6], "verdict": 0, "desc": "Uroczystość Objawienia Pańskiego", "aka": "Święto Trzech Króli"},
+                {"date": [3, 19], "verdict": 0, "desc": "Uroczystość świętego Józefa"},
+                {"date": [4, 23], "verdict": 0, "desc": "Uroczystość świętego Wojciecha patrona Polski"},
+                {"date": [5, 3], "verdict": 0, "desc": "Uroczystość Najświętszej Maryi Panny Królowej Polski"},
+                {"date": [5, 8], "verdict": 0, "desc": "Uroczystość świętego Stanisława ze Szczepanowa"},
+                {"date": [6, 24], "verdict": 0, "desc": "Uroczystość narodzenia świętego Jana Chrzciciela"},
+                {"date": [6, 29], "verdict": 0, "desc": "Uroczystość świętych apostołów Piotra i Pawła"},
+                {"date": [8, 15], "verdict": 0, "desc": "Uroczystość wniebowzięcia Najświętszej Maryi Panny", "aka": "Matki Boskiej Zielnej"},
+                {"date": [8, 26], "verdict": 0, "desc": "Uroczystość Najświętszej Maryi Panny Częstochowskiej"},
+                {"date": [10, 20], "verdict": 0, "desc": "Uroczystość świętego Jana Kantego"},
+                {"date": [11, 1], "verdict": 0, "desc": "Uroczystość Wszystkich Świętych"},
+                {"date": [11, 22], "verdict": 0, "desc": "Uroczystość Jezusa Chrystusa Króla Wszechświata"},
+                {"date": [12, 8], "verdict": 0, "desc": "Uroczystość Niepokalanego Poczęcia Najświętszej Maryi Panny"},
+                {"date": [12, 25], "verdict": 0, "desc": "Uroczystość Narodzenia Pańskiego", "aka": "Boże Narodzenie"},
+                {"date": [12, 24], "verdict": 1, "desc": "Wigilia Narodzenia Pańskiego"},
+                ];
+
             var today = new Date();
-            today.setHours( 0, 0, 0, 0 );
+            today.setHours(0, 0, 0, 0);
             var easter = get_easter_date(today.getFullYear());
 
             console.log("Today's date: " + today);
@@ -75,49 +104,33 @@
 
             console.log("Days until Easter:  " + easter_diff);
 
-            var verdict = 0;
+            var verdict = null;
             var date_desc = null;
             var date_desc_aka = null;
             var comment = null;
 
-            if (easter_diff == 2) {
-                verdict = 3;
-                date_desc = "Wielki Piątek";
-            } else if (easter_diff == 46) {
-                verdict = 3;
-                date_desc = "Środa popielcowa";
-            } else if (easter_diff == 1) {
-                verdict = 2;
-                date_desc = "Wielka Sobota";
-            } else if (easter_diff == 0) {
-                verdict = 0;
-                date_desc = "Wielkanoc";
-            } else if (easter_diff == -5) {
-                verdict = 0;
-                date_desc = "piątek Oktawy Wielkanocnej";
-            } else if (easter_diff == -114) {
-                verdict = 0;
-                date_desc = "Uroczystość Najświętszego Serca Pana Jezusa";
-            } else if (today.getMonth() == 1 && today.getDate() == 1) {
-                verdict = 0;
-                date_desc = "Dzień Świętej Bożej Rodzicielki";
-                date_desc_aka = "Nowy Rok";
-            } else if (today.getMonth() == 8 && today.getDate() == 15) {
-                verdict = 0;
-                date_desc = "Wniebowzięcie Najświętszej Maryi Panny";
-                date_desc_aka = "Matki Boskiej Zielnej";
-            } else if (today.getMonth() == 11 && today.getDate() == 1) {
-                verdict = 0;
-                date_desc = "Wszystkich Świętych";
-            } else if (today.getMonth() == 12 && today.getDate() == 25) {
-                verdict = 0;
-                date_desc = "Boże Narodzenie";
-            } else if (today.getMonth() == 12 && today.getDate() == 24) {
-                verdict = 1;
-                date_desc = "Wigilia Bożego Narodzenia";
-            } else if (today.getDay() == 5) {
-                verdict = 2;
-                date_desc = "piątek";
+            for (const entry of special_dates) {
+                if ("easter_diff" in entry) {
+                    if (easter_diff != entry["easter_diff"])
+                        continue;
+                } else {
+                    if (today.getMonth() + 1 != entry["date"][0] || today.getDate() != entry["date"][1]) {
+                        continue;
+                    }
+                }
+                verdict = entry["verdict"];
+                date_desc = entry["desc"];
+                date_desc_aka = entry["aka"];
+                break;
+            }
+
+            if (verdict == null) {
+                if (today.getDay() == 5) {
+                    verdict = 2;
+                    date_desc = "piątek";
+                } else {
+                    verdict = 0;
+                }
             }
 
             $("#verdict").hide();
@@ -138,13 +151,19 @@
             }
 
             if (date_desc_aka != null) {
-                $("#comment").append(" (aka " + date_desc_aka + ")");
+                $("#comment").append(" (czyli " + date_desc_aka + ")");
             }
 
-            if (verdict == 3) {
-                $("#comment").append(", więc obowiązuje post ścisły");
-            } else if (verdict == 1) {
-                $("#comment").append(", ale można zachować post ze względu na tradycję narodową");
+            switch (verdict) {
+                case 1:
+                    $("#comment").append(".  Można zachować post ze względu na tradycję narodową");
+                    break;
+                case 2:
+                    $("#comment").append(", więc należy zachować wstrzemięźliwość od pokarmów mięsnych");
+                    break;
+                case 3:
+                    $("#comment").append(", więc obowiązuje post ścisły");
+                    break;
             }
 
             if (date_desc != null) {
