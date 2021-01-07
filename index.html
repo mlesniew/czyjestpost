@@ -140,9 +140,9 @@
             $("#explain").hide();
 
             if (verdict >= 2) {
-                $("#verdict").text("Dzisiaj jest post");
+                $("#verdict").text("Tak.");
             } else {
-                $("#verdict").text("Dzisiaj nie ma postu");
+                $("#verdict").text("Nie.");
             }
 
             var explain_fn = null;
@@ -184,12 +184,13 @@
 
   </head>
   <body>
-    <div class="container">
-        <h1 class="display-1 text-center m-5" id="verdict"></h1>
-        <p class="text-center" id="explain">
-            <a href="#" onclick="show_comment();" class="mt-5">jak to?</a>
+      <div class="container text-center" style="font-size: 3vw">
+        <h1 class="mt-4" style="font-size: 5vw">Czy dzisiaj jest post?</h1>
+        <p style="font-size: 20vw" id="verdict"></p>
+        <p class="text-muted" id="explain">
+            <a class="text-muted" href="#" onclick="show_comment();">Jak to?</a>
         </p>
-        <h2 class="text-muted text-center mt-5" id="comment"></h2>
+        <p class="text-muted" id="comment"></p>
     </div>
   </body>
 </html>
