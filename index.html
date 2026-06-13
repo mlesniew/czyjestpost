@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#5c1a1a">
+  <title>Czy jest post?</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:         oklch(97.5% 0.012 68);
+      --text:       oklch(20%   0.015 65);
+      --text-muted: oklch(57%   0.013 65);
+      --text-faint: oklch(73%   0.010 65);
+      --divider:    oklch(88%   0.012 65);
+      --tak:        oklch(37%   0.155 22);   /* deep crimson  */
+      --nie:        oklch(40%   0.115 155);  /* deep forest green */
+      --link:       oklch(45%   0.130 30);   /* warm burgundy */
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-weight: 300;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      padding: 2rem 1.5rem 4rem;
+      text-align: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .date {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-weight: 400;
+    }
+
+    .title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(1.35rem, 4.5vw, 2.3rem);
+      color: var(--text);
+      line-height: 1.2;
+      margin-top: 0.15rem;
+    }
+
+    .rule {
+      width: 2.5rem;
+      height: 1px;
+      background: var(--divider);
+      margin: 0.4rem 0;
+    }
+
+    .answer {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      font-style: normal;
+      font-size: clamp(7rem, 23vw, 17rem);
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .answer.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    .answer.tak { color: var(--tak); }
+    .answer.nie { color: var(--nie); }
+
+    .explanation {
+      margin-top: 0.6rem;
+      font-size: clamp(0.88rem, 2.6vw, 1.05rem);
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 420px;
+      cursor: pointer;
+      user-select: none;
+      padding: 0.2rem 0;
+    }
+
+    .explanation .prompt {
+      color: var(--link);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      transition: opacity 0.15s;
+    }
+
+    .explanation:hover .prompt {
+      opacity: 0.65;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.1rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      letter-spacing: 0.03em;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="date" id="date-el"></p>
+    <h1 class="title">Czy dzisiaj jest post?</h1>
+    <div class="rule"></div>
+    <p class="answer" id="answer-el"></p>
+    <p class="explanation" id="explanation-el" style="display:none"></p>
+  </main>
+  <footer>W razie wątpliwości zapytaj proboszcza</footer>
+
+  <script>
+    // Easter date algorithm — adapted from the original
+    // https://stackoverflow.com/questions/1284314/easter-date-in-javascript
+    function get_easter_date(y) {
+      var date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setFullYear(y);
+      var a = y % 19;
+      var b = (2200 <= y && y <= 2299)
+        ? ((11 * a) + 4) % 30
+        : ((11 * a) + 5) % 30;
+      var c = ((b === 0) || (b === 1 && a > 10)) ? (b + 1) : b;
+      var m = (1 <= c && c <= 19) ? 3 : 2;
+      var d = (50 - c) % 31;
+      date.setMonth(m, d);
+      date.setMonth(m, d + (7 - date.getDay()));
+      return date;
+    }
+
+    var special_dates = [
+      { easter_diff:  46, verdict: 3, desc: "Środa Popielcowa" },
+      { easter_diff:   2, verdict: 3, desc: "Wielki Piątek" },
+      { easter_diff:   1, verdict: 2, desc: "Wielka Sobota" },
+      { easter_diff:   0, verdict: 0, desc: "Wielkanoc" },
+      { easter_diff:  -5, verdict: 0, desc: "piątek Oktawy Wielkanocnej" },
+      { easter_diff: -42, verdict: 0, desc: "Uroczystość Wniebowstąpienia Pańskiego" },
+      { easter_diff: -56, verdict: 0, desc: "Uroczystość Najświętszej Trójcy" },
+      { easter_diff: -60, verdict: 0, desc: "Uroczystość Najświętszego Ciała i Krwi Chrystusa", aka: "Boże Ciało" },
+      { easter_diff: -68, verdict: 0, desc: "Uroczystość Najświętszego Serca Pana Jezusa" },
+      { date: [1,  1],  verdict: 0, desc: "Uroczystość Świętej Bożej Rodzicielki Maryi", aka: "Nowy Rok" },
+      { date: [1,  6],  verdict: 0, desc: "Uroczystość Objawienia Pańskiego", aka: "Święto Trzech Króli" },
+      { date: [3,  19], verdict: 0, desc: "Uroczystość świętego Józefa" },
+      { date: [3,  25], verdict: 0, desc: "Uroczystość Zwiastowania Pańskiego" },
+      { date: [4,  23], verdict: 0, desc: "Uroczystość świętego Wojciecha patrona Polski" },
+      { date: [5,  3],  verdict: 0, desc: "Uroczystość Najświętszej Maryi Panny Królowej Polski" },
+      { date: [5,  8],  verdict: 0, desc: "Uroczystość świętego Stanisława ze Szczepanowa" },
+      { date: [6,  24], verdict: 0, desc: "Uroczystość narodzenia świętego Jana Chrzciciela" },
+      { date: [6,  29], verdict: 0, desc: "Uroczystość świętych apostołów Piotra i Pawła" },
+      { date: [8,  15], verdict: 0, desc: "Uroczystość wniebowzięcia Najświętszej Maryi Panny", aka: "Matki Boskiej Zielnej" },
+      { date: [8,  26], verdict: 0, desc: "Uroczystość Najświętszej Maryi Panny Częstochowskiej" },
+      { date: [10, 20], verdict: 0, desc: "Uroczystość świętego Jana Kantego, patrona Polski i Litwy" },
+      { date: [11, 1],  verdict: 0, desc: "Uroczystość Wszystkich Świętych" },
+      { date: [12, 8],  verdict: 0, desc: "Uroczystość Niepokalanego Poczęcia Najświętszej Maryi Panny" },
+      { date: [12, 24], verdict: 1, desc: "Wigilia Narodzenia Pańskiego" },
+      { date: [12, 25], verdict: 0, desc: "Uroczystość Narodzenia Pańskiego", aka: "Boże Narodzenie" },
+    ];
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var easter = get_easter_date(today.getFullYear());
+    var easter_diff = Math.round((easter - today) / 86400000);
+
+    var verdict = null, date_desc = null, date_desc_aka = null;
+
+    for (var i = 0; i < special_dates.length; i++) {
+      var e = special_dates[i];
+      if ('easter_diff' in e) {
+        if (easter_diff !== e.easter_diff) continue;
+      } else {
+        if (today.getMonth() + 1 !== e.date[0] || today.getDate() !== e.date[1]) continue;
+      }
+      verdict = e.verdict;
+      date_desc = e.desc;
+      date_desc_aka = e.aka || null;
+      break;
+    }
+
+    if (verdict === null) {
+      if (today.getDay() === 5) { verdict = 2; date_desc = "piątek"; }
+      else { verdict = 0; }
+    }
+
+    var explanation = null;
+    if (date_desc !== null) {
+      explanation = "Jest " + date_desc;
+      if (date_desc_aka) explanation += " (czyli " + date_desc_aka + ")";
+      if      (verdict === 1) explanation += ".  Można zachować post ze względu na tradycję narodową";
+      else if (verdict === 2) explanation += ", więc należy zachować wstrzemięźliwość od pokarmów mięsnych";
+      else if (verdict === 3) explanation += ", więc obowiązuje post ścisły";
+      explanation += ".";
+    }
+
+    var isPost = verdict >= 2;
+
+    // Render date
+    document.getElementById('date-el').textContent =
+      today.toLocaleDateString('pl-PL', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+
+    // Render answer with entrance animation
+    var answerEl = document.getElementById('answer-el');
+    answerEl.textContent = isPost ? 'Tak' : 'Nie';
+    answerEl.classList.add(isPost ? 'tak' : 'nie');
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        answerEl.classList.add('visible');
+      });
+    });
+
+    // Render explanation toggle
+    var expEl = document.getElementById('explanation-el');
+    if (explanation) {
+      expEl.style.display = '';
+      var showing = false;
+
+      function renderExplanation() {
+        if (showing) {
+          expEl.textContent = explanation;
+        } else {
+          expEl.innerHTML = '<span class="prompt">Jak to?</span>';
+        }
+      }
+
+      renderExplanation();
+      expEl.addEventListener('click', function() {
+        showing = !showing;
+        renderExplanation();
+      });
+    }
+  </script>
+</body>
+</html>
